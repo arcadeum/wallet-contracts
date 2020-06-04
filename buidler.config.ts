@@ -5,7 +5,7 @@ usePlugin("solidity-coverage");
 
 module.exports = {
   solc: {
-    version: "0.6.8",
+    version: "0.6.9",
     optimizer: {
       enabled: true,
       runs: 1000000
