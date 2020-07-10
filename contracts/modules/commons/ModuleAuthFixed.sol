@@ -11,16 +11,14 @@ import "../../Wallet.sol";
  *  without using any aditional contract storage
  */
 contract ModuleAuthFixed is ModuleAuth {
-  bytes32 public INIT_CODE_HASH;
-  address public FACTORY;
+  // keccak256("placeholder-init-code-hash")
+  bytes32 public constant INIT_CODE_HASH = 0xa4e481c95834a9f994a80cd4ecc88bdd3e78ff54100ecf2903aa9ef3eed54a91;
 
-  constructor(address _factory) public {
-    // Build init code hash of the deployed wallets using that module
-    bytes32 initCodeHash = keccak256(abi.encodePacked(type(Wallet).creationCode, uint256(address(this))));
+  // keccak256("placeholder-factory")[12:]
+  address public constant FACTORY = address(0x52AA901CAD8AFf3Cf157715c19632F79D9B2d049);
 
-    INIT_CODE_HASH = initCodeHash;
-    FACTORY = _factory;
-  }
+  // Wallet contract code
+  bytes public constant WALLET_CODE = hex"603a600e3d39601a805130553df3363d3d373d3d3d363d30545af43d82803e903d91601857fd5bf3";
 
   /**
    * @notice Validates the signature image with the salt used to deploy the contract

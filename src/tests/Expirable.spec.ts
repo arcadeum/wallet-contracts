@@ -2,6 +2,7 @@ import * as ethers from 'ethers'
 import { expect, signAndExecuteMetaTx, RevertError, encodeImageHash, addressOf } from './utils';
 
 import { MainModule } from 'typings/contracts/MainModule'
+import { MainModuleDeployer } from 'typings/contracts/MainModuleDeployer'
 import { Factory } from 'typings/contracts/Factory'
 import { ExpirableUtil } from 'typings/contracts/ExpirableUtil'
 import { CallReceiverMock } from 'typings/contracts/CallReceiverMock'
@@ -12,6 +13,7 @@ const FactoryArtifact = artifacts.require('Factory')
 const MainModuleArtifact = artifacts.require('MainModule')
 const ExpirableUtilArtifact = artifacts.require('ExpirableUtil')
 const CallReceiverMockArtifact = artifacts.require('CallReceiverMock')
+const MainModuleDeployerArtifact = artifacts.require('MainModuleDeployer')
 
 const web3 = (global as any).web3
 
@@ -22,6 +24,7 @@ function now(): number {
 contract('Expirable', (accounts: string[]) => {
   let factory: Factory
   let module: MainModule
+  let moduleDeployer: MainModuleDeployer
   let expirableUtil: ExpirableUtil
 
   let owner: ethers.Wallet
@@ -32,8 +35,12 @@ contract('Expirable', (accounts: string[]) => {
   before(async () => {
     // Deploy wallet factory
     factory = await FactoryArtifact.new()
+    // Deploy main module deployer
+    moduleDeployer = await MainModuleDeployerArtifact.new()
     // Deploy MainModule
-    module = await MainModuleArtifact.new(factory.address)
+    let module_tx = await moduleDeployer.deploy(factory.address)
+    //@ts-ignore
+    module = await MainModuleArtifact.at(module_tx.logs[0].args._module)
     // Get network ID
     networkId = process.env.NET_ID ? process.env.NET_ID : await web3.eth.net.getId()
     // Deploy expirable util

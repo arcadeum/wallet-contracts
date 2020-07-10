@@ -27,7 +27,7 @@ contract('Factory', (accounts: string[]) => {
     it('Should predict wallet address', async () => {
       const hash = ethers.utils.hexlify(ethers.utils.randomBytes(32))
       const predict = addressOf(factory.address, module.address, hash)
-      await factory.deploy(module.address, hash)
+      let tx = await factory.deploy(module.address, hash)
       expect(await web3.eth.getCode(predict)).to.not.equal("0x")
     })
     it('Should initialize with main module', async () => {

@@ -29,9 +29,4 @@ contract MainModule is
   ModuleHooks,
   ModuleCreator
 {
-  constructor(
-    address _factory
-  ) public ModuleAuthFixed(
-    _factory
-  ) { }
 }

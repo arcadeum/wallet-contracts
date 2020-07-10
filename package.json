@@ -5,16 +5,17 @@
   "license": "none",
   "scripts": {
     "prepare": "npm run build",
-    "build": "truffle compile",
+    "build": "truffle compile --all && yarn gen:contract-typings && tsc -b",
     "postbuild": "yarn gen:contract-typings && tsc -b",
-    "clean": "rimraf artifacts && rimraf typings/contracts && rimraf cache",
+    "clean": "rimraf artifacts && rimraf typings/contracts && rimraf cache && rimraf build",
     "pretest": "yarn build",
-    "test": "truffle test build/src/tests/*.spec.js",
-    "test:truffle": "tsc -b && truffle test --network ganache build/*.spec.js",
+    "test": "NET_ID=1 truffle test build/*.spec.js",
+    "test:buidler": "buidler test",
+    "test:truffle": "NET_ID=1 tsc -b && truffle test --network ganache build/*.spec.js",
     "precoverage": "yarn build",
     "coverage": "NET_ID=1 buidler coverage",
     "benchmark": "BENCHMARK=true yarn test",
-    "gen:contract-typings": "rimraf typings/contracts/* && typechain --target ethers --outDir typings/contracts './artifacts/*.json'",
+    "gen:contract-typings": "rimraf typings/contracts/* && typechain --target ethers --outDir typings/contracts './build/contracts/*.json'",
     "lint": "yarn lint:ts && yarn lint:sol",
     "lint:fix": "yarn lint:ts:fix && yarn lint:sol:fix",
     "lint:sol": "solhint contracts/**/*.sol",
@@ -31,7 +32,9 @@
   },
   "files": [
     "artifacts",
-    "typings"
+    "typings",
+    "build",
+    "contracts"
   ],
   "config": {
     "mnemonic": "concert load couple harbor equip island argue ramp clarify fence smart topic",

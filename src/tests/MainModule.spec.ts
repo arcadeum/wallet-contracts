@@ -1,7 +1,8 @@
 import * as ethers from 'ethers'
-import { expect, signAndExecuteMetaTx, RevertError, ethSign, encodeImageHash, walletSign, walletMultiSign, multiSignAndExecuteMetaTx, encodeNonce, moduleStorageKey, encodeMetaTransactionsData, addressOf } from './utils';
+import { expect, signAndExecuteMetaTx, RevertError, encodeImageHash, walletSign, multiSignAndExecuteMetaTx, encodeNonce, moduleStorageKey, encodeMetaTransactionsData, addressOf, AbstractContract, Web3DebugProvider, createTestWallet } from './utils';
 
 import { MainModule } from 'typings/contracts/MainModule'
+import { MainModuleDeployer } from 'typings/contracts/MainModuleDeployer'
 import { MainModuleUpgradable } from 'typings/contracts/MainModuleUpgradable'
 import { Factory } from 'typings/contracts/Factory'
 import { CallReceiverMock } from 'typings/contracts/CallReceiverMock'
@@ -24,26 +25,33 @@ const HookMockArtifact = artifacts.require('HookMock')
 const DelegateCallMockArtifact = artifacts.require('DelegateCallMock')
 const MainModuleUpgradableArtifact = artifacts.require('MainModuleUpgradable')
 const GasBurnerMockArtifact = artifacts.require('GasBurnerMock')
+const MainModuleDeployerArtifact = artifacts.require('MainModuleDeployer')
 
 const web3 = (global as any).web3
 
 contract('MainModule', (accounts: string[]) => {
-  let factory
-  let module
+  let factory: Factory
+  let module: MainModule
+  let moduleDeployer: MainModuleDeployer
 
   let owner
-  let wallet
+  let wallet 
 
-  let moduleUpgradable
+  let moduleUpgradable: MainModuleUpgradable
 
   let networkId
 
   before(async () => {
     // Deploy wallet factory
-    factory = await FactoryArtifact.new() as Factory
+    factory = await FactoryArtifact.new()
+    // Deploy main module deployer
+    moduleDeployer = await MainModuleDeployerArtifact.new()
     // Deploy MainModule
-    module = await MainModuleArtifact.new(factory.address) as MainModule
+    let module_tx = await moduleDeployer.deploy(factory.address)
+    //@ts-ignore
+    module = await MainModuleArtifact.at(module_tx.logs[0].args._module)
     moduleUpgradable = (await MainModuleUpgradableArtifact.new()) as MainModuleUpgradable
+
     // Get network ID
     networkId = process.env.NET_ID ? process.env.NET_ID : await web3.eth.net.getId()
   })
@@ -68,6 +76,7 @@ contract('MainModule', (accounts: string[]) => {
       
       await signAndExecuteMetaTx(wallet, owner, [transaction], networkId)
     })
+
     it('Should reject non-owner signature', async () => {
       const impostor = new ethers.Wallet(ethers.utils.randomBytes(32))
 
@@ -974,7 +983,7 @@ contract('MainModule', (accounts: string[]) => {
         ]
 
         await signAndExecuteMetaTx(wallet, owner, migrateTransaction, networkId)
-        wallet = newWallet
+        wallet = newWallet 
       })
       it('Should implement new upgradable module', async () => {
         expect(await wallet.imageHash()).to.equal(newImageHash)
