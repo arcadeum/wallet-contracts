@@ -1,5 +1,4 @@
-pragma solidity ^0.6.8;
-
+pragma solidity 0.5.16;
 
 library ModuleStorage {
   function writeBytes32(bytes32 _key, bytes32 _val) internal {

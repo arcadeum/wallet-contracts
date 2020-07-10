@@ -1,4 +1,4 @@
-pragma solidity ^0.6.8;
+pragma solidity 0.5.16;
 
 import "./interfaces/IModuleAuthUpgradable.sol";
 
@@ -7,7 +7,7 @@ import "./ModuleAuth.sol";
 import "./ModuleStorage.sol";
 
 
-abstract contract ModuleAuthUpgradable is IModuleAuthUpgradable, ModuleAuth, ModuleSelfAuth {
+contract ModuleAuthUpgradable is IModuleAuthUpgradable, ModuleAuth, ModuleSelfAuth {
   //                       IMAGE_HASH_KEY = keccak256("org.arcadeum.module.auth.upgradable.image.hash");
   bytes32 private constant IMAGE_HASH_KEY = bytes32(0xea7157fa25e3aa17d0ae2d5280fa4e24d421c61842aa85e45194e1145aa72bf8);
 
@@ -18,7 +18,7 @@ abstract contract ModuleAuthUpgradable is IModuleAuthUpgradable, ModuleAuth, Mod
    *      could make transactions impossible to execute as all the signers must be
    *      passed for each transaction.
    */
-  function updateImageHash(bytes32 _imageHash) external override onlySelf {
+  function updateImageHash(bytes32 _imageHash) external onlySelf {
     require(_imageHash != bytes32(0), "ModuleAuthUpgradable#updateImageHash INVALID_IMAGE_HASH");
     ModuleStorage.writeBytes32(IMAGE_HASH_KEY, _imageHash);
   }
@@ -26,7 +26,7 @@ abstract contract ModuleAuthUpgradable is IModuleAuthUpgradable, ModuleAuth, Mod
   /**
    * @notice Returns the current image hash of the wallet
    */
-  function imageHash() external override view returns (bytes32) {
+  function imageHash() external view returns (bytes32) {
     return ModuleStorage.readBytes32(IMAGE_HASH_KEY);
   }
 
@@ -36,20 +36,7 @@ abstract contract ModuleAuthUpgradable is IModuleAuthUpgradable, ModuleAuth, Mod
    * @param _imageHash Hash image of signature
    * @return true if the signature image is valid
    */
-  function _isValidImage(bytes32 _imageHash) internal override view returns (bool) {
+  function _isValidImage(bytes32 _imageHash) internal view returns (bool) {
     return _imageHash != bytes32(0) && _imageHash == ModuleStorage.readBytes32(IMAGE_HASH_KEY);
-  }
-
-  /**
-   * @notice Query if a contract implements an interface
-   * @param _interfaceID The interface identifier, as specified in ERC-165
-   * @return `true` if the contract implements `_interfaceID`
-   */
-  function supportsInterface(bytes4 _interfaceID) public override virtual pure returns (bool) {
-    if (_interfaceID == type(IModuleAuthUpgradable).interfaceId) {
-      return true;
-    }
-
-    return super.supportsInterface(_interfaceID);
   }
 }

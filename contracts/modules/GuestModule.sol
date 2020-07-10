@@ -1,4 +1,4 @@
-pragma solidity 0.6.8;
+pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
 import "../utils/SignatureValidator.sol";
@@ -36,7 +36,7 @@ contract GuestModule is
     Transaction[] memory _txs,
     uint256,
     bytes memory
-  ) public override {
+  ) public {
     // Hash transaction bundle
     bytes32 txHash = _hashData(abi.encode('guest:', _txs));
 
@@ -50,7 +50,7 @@ contract GuestModule is
    */
   function selfExecute(
     Transaction[] memory _txs
-  ) public override {
+  ) public {
     // Hash transaction bundle
     bytes32 txHash = _hashData(abi.encode('self:', _txs));
 
@@ -74,15 +74,9 @@ contract GuestModule is
       bool success;
       bytes memory result;
 
-      require(!transaction.delegateCall, 'GuestModule#_executeGuest: delegateCall not allowed');
-
-      // solhint-disable
-      (success, result) = transaction.target.call{
-        value: transaction.value,
-        gas: transaction.gasLimit
-      }(transaction.data);
-      // solhint-enable
-
+      require(!transaction.delegateCall, "GuestModule#_executeGuest: delegateCall not allowed");
+      (success, result) = transaction.target.call.value(transaction.value).gas(transaction.gasLimit)(transaction.data);
+  
       if (success) {
         emit TxExecuted(_txHash);
       } else {
@@ -95,22 +89,7 @@ contract GuestModule is
    * @notice Validates any signature image, because the wallet is public and has now owner.
    * @return true, all signatures are valid.
    */
-  function _isValidImage(bytes32) internal override view returns (bool) {
+  function _isValidImage(bytes32) internal view returns (bool) {
     return true;
-  }
-
-  /**
-   * @notice Query if a contract implements an interface
-   * @param _interfaceID The interface identifier, as specified in ERC-165
-   * @return `true` if the contract implements `_interfaceID`
-   */
-  function supportsInterface(
-    bytes4 _interfaceID
-  ) public override (
-    ModuleAuth,
-    ModuleCalls,
-    ModuleCreator
-  ) pure returns (bool) {
-    return super.supportsInterface(_interfaceID);
   }
 }

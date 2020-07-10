@@ -1,4 +1,4 @@
-pragma solidity ^0.6.8;
+pragma solidity 0.5.16;
 
 import "./interfaces/IModuleUpdate.sol";
 
@@ -17,21 +17,8 @@ contract ModuleUpdate is IModuleUpdate, ModuleERC165, ModuleSelfAuth, Implementa
    * @param _implementation New main module implementation
    * @dev WARNING Updating the implementation can brick the wallet
    */
-  function updateImplementation(address _implementation) external override onlySelf {
+  function updateImplementation(address _implementation) external onlySelf {
     require(_implementation.isContract(), "ModuleUpdate#updateImplementation: INVALID_IMPLEMENTATION");
     _setImplementation(_implementation);
-  }
-
-  /**
-   * @notice Query if a contract implements an interface
-   * @param _interfaceID The interface identifier, as specified in ERC-165
-   * @return `true` if the contract implements `_interfaceID`
-   */
-  function supportsInterface(bytes4 _interfaceID) public override virtual pure returns (bool) {
-    if (_interfaceID == type(IModuleUpdate).interfaceId) {
-      return true;
-    }
-
-    return super.supportsInterface(_interfaceID);
   }
 }

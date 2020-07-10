@@ -1,5 +1,4 @@
-pragma solidity ^0.6.8;
-
+pragma solidity 0.5.16;
 import "../interfaces/IERC1271Wallet.sol";
 
 import "./LibBytes.sol";

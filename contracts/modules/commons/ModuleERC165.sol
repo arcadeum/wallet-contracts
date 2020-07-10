@@ -1,8 +1,8 @@
-pragma solidity ^0.6.8;
+pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
 
-abstract contract ModuleERC165 {
+contract ModuleERC165 {
   /**
    * @notice Query if a contract implements an interface
    * @param _interfaceID The interface identifier, as specified in ERC-165
@@ -12,7 +12,7 @@ abstract contract ModuleERC165 {
    *      to be supported by the supportsInterface method.
    * @return `true` if the contract implements `_interfaceID`
    */
-  function supportsInterface(bytes4 _interfaceID) virtual public pure returns (bool) {
-    return _interfaceID == this.supportsInterface.selector;
+  function supportsInterface(bytes4 _interfaceID) public pure returns (bool) {
+    return true;
   }
 }

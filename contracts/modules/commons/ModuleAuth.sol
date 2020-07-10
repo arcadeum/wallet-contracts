@@ -1,4 +1,4 @@
-pragma solidity ^0.6.8;
+pragma solidity 0.5.16;
 
 import "../../utils/LibBytes.sol";
 import "../../utils/SignatureValidator.sol";
@@ -9,7 +9,7 @@ import "./interfaces/IModuleAuth.sol";
 import "./ModuleERC165.sol";
 
 
-abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, IERC1271Wallet {
+contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, IERC1271Wallet {
   using LibBytes for bytes;
 
   uint256 private constant FLAG_SIGNATURE = 0;
@@ -47,7 +47,7 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
     bytes32 _hash,
     bytes memory _signature
   )
-    internal override view returns (bool)
+    internal view returns (bool)
   {
     (
       uint16 threshold,  // required threshold signature
@@ -63,7 +63,9 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
     // Iterate until the image is completed
     while (rindex < _signature.length) {
       // Read next item type and addrWeight
-      uint256 flag; uint256 addrWeight; address addr;
+      uint256 flag;
+      uint256 addrWeight;
+      address addr;
       (flag, addrWeight, rindex) = _signature.readUint8Uint8(rindex);
 
       if (flag == FLAG_ADDRESS) {
@@ -93,14 +95,14 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
    * @param _imageHash Hashed image of signature
    * @return true if the signature image is valid
    */
-  function _isValidImage(bytes32 _imageHash) internal virtual view returns (bool);
+  function _isValidImage(bytes32 _imageHash) internal view returns (bool);
 
   /**
    * @notice Will hash _data to be signed (similar to EIP-712)
    * @param _data Data to be hashed
    * @return hashed data for this wallet
    */
-  function _hashData(bytes memory _data) internal override view returns (bytes32) {
+  function _hashData(bytes memory _data) internal view returns (bytes32) {
     uint256 chainId; assembly { chainId := chainid() }
     return keccak256(
       abi.encodePacked(
@@ -124,7 +126,7 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
   function isValidSignature(
     bytes calldata _data,
     bytes calldata _signatures
-  ) external override view returns (bytes4) {
+  ) external view returns (bytes4) {
     // Validate signatures
     if (_signatureValidation(_hashData(_data), _signatures)) {
       return SELECTOR_ERC1271_BYTES_BYTES;
@@ -143,26 +145,10 @@ abstract contract ModuleAuth is IModuleAuth, ModuleERC165, SignatureValidator, I
   function isValidSignature(
     bytes32 _hash,
     bytes calldata _signatures
-  ) external override view returns (bytes4) {
+  ) external view returns (bytes4) {
     // Validate signatures
     if (_signatureValidation(_hash, _signatures)) {
       return SELECTOR_ERC1271_BYTES32_BYTES;
     }
-  }
-
-  /**
-   * @notice Query if a contract implements an interface
-   * @param _interfaceID The interface identifier, as specified in ERC-165
-   * @return `true` if the contract implements `_interfaceID`
-   */
-  function supportsInterface(bytes4 _interfaceID) public override virtual pure returns (bool) {
-    if (
-      _interfaceID == type(IModuleAuth).interfaceId ||
-      _interfaceID == type(IERC1271Wallet).interfaceId
-    ) {
-      return true;
-    }
-
-    return super.supportsInterface(_interfaceID);
   }
 }

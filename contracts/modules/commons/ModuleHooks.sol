@@ -1,4 +1,4 @@
-pragma solidity ^0.6.8;
+pragma solidity 0.5.16;
 
 import "./interfaces/IModuleHooks.sol";
 
@@ -20,7 +20,7 @@ contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IModuleHooks, ModuleE
    * @param _signature Signature function
    * @return The address of the implementation hook, address(0) if none
   */
-  function readHook(bytes4 _signature) external override view returns (address) {
+  function readHook(bytes4 _signature) external view returns (address) {
     return _readHook(_signature);
   }
 
@@ -30,7 +30,7 @@ contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IModuleHooks, ModuleE
    * @param _implementation Hook implementation contract
    * @dev Can't overwrite hooks that are part of the mainmodule (those defined below)
    */
-  function addHook(bytes4 _signature, address _implementation) external override onlySelf {
+  function addHook(bytes4 _signature, address _implementation) external onlySelf {
     require(_readHook(_signature) == address(0), "ModuleHooks#addHook: HOOK_ALREADY_REGISTERED");
     _writeHook(_signature, _implementation);
   }
@@ -38,10 +38,10 @@ contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IModuleHooks, ModuleE
   /**
    * @notice Removes a registered hook
    * @param _signature Signature function linked to the hook
-   * @dev Can't remove hooks that are part of the mainmodule (those defined below) 
+   * @dev Can't remove hooks that are part of the mainmodule (those defined below)
    *      without upgrading the wallet
    */
-  function removeHook(bytes4 _signature) external override onlySelf {
+  function removeHook(bytes4 _signature) external onlySelf {
     require(_readHook(_signature) != address(0), "ModuleHooks#removeHook: HOOK_NOT_REGISTERED");
     _writeHook(_signature, address(0));
   }
@@ -74,8 +74,8 @@ contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IModuleHooks, ModuleE
     uint256,
     uint256,
     bytes calldata
-  ) external override returns (bytes4) {
-    return ModuleHooks.onERC1155Received.selector;
+  ) external returns (bytes4) {
+    return this.onERC1155Received.selector;
   }
 
   /**
@@ -88,22 +88,22 @@ contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IModuleHooks, ModuleE
     uint256[] calldata,
     uint256[] calldata,
     bytes calldata
-  ) external override returns (bytes4) {
-    return ModuleHooks.onERC1155BatchReceived.selector;
+  ) external returns (bytes4) {
+    return this.onERC1155BatchReceived.selector;
   }
 
   /**
    * @notice Handle the receipt of a single ERC721 token.
    * @return `bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))`
    */
-  function onERC721Received(address, address, uint256, bytes calldata) external override returns (bytes4) {
-    return ModuleHooks.onERC721Received.selector;
+  function onERC721Received(address, address, uint256, bytes calldata) external returns (bytes4) {
+    return this.onERC721Received.selector;
   }
 
   /**
    * @notice Routes fallback calls through hooks
    */
-  fallback() external payable {
+  function() external payable {
     address target = _readHook(msg.sig);
     if (target != address(0)) {
       (bool success, bytes memory result) = target.delegatecall(msg.data);
@@ -115,28 +115,5 @@ contract ModuleHooks is IERC1155Receiver, IERC721Receiver, IModuleHooks, ModuleE
         return(add(result, 0x20), mload(result))
       }
     }
-  }
-
-  /**
-   * @notice Allows the wallet to receive ETH
-   */
-  receive() external payable { }
-
-  /**
-   * @notice Query if a contract implements an interface
-   * @param _interfaceID The interface identifier, as specified in ERC-165
-   * @return `true` if the contract implements `_interfaceID`
-   */
-  function supportsInterface(bytes4 _interfaceID) public override virtual pure returns (bool) {
-    if (
-      _interfaceID == type(IModuleHooks).interfaceId ||
-      _interfaceID == type(IERC1155Receiver).interfaceId ||
-      _interfaceID == type(IERC721Receiver).interfaceId ||
-      _interfaceID == type(IERC223Receiver).interfaceId
-    ) {
-      return true;
-    }
-
-    return super.supportsInterface(_interfaceID);
   }
 }

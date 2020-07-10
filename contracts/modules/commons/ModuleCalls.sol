@@ -1,4 +1,4 @@
-pragma solidity ^0.6.8;
+pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
 import "./ModuleSelfAuth.sol";
@@ -9,7 +9,7 @@ import "./interfaces/IModuleCalls.sol";
 import "./interfaces/IModuleAuth.sol";
 
 
-abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, ModuleSelfAuth {
+contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, ModuleSelfAuth {
   //                       NONCE_KEY = keccak256("org.arcadeum.module.calls.nonce");
   bytes32 private constant NONCE_KEY = bytes32(0x8d0bf1fd623d628c741362c1289948e57b3e2905218c676d3e69abee36d6ae2e);
 
@@ -21,7 +21,7 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
    * @dev The default nonce space is 0x00
    * @return The next nonce
    */
-  function nonce() external override virtual view returns (uint256) {
+  function nonce() external view returns (uint256) {
     return readNonce(0);
   }
 
@@ -30,7 +30,7 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
    * @param _space Nonce space, each space keeps an independent nonce count
    * @return The next nonce
    */
-  function readNonce(uint256 _space) public override virtual view returns (uint256) {
+  function readNonce(uint256 _space) public view returns (uint256) {
     return uint256(ModuleStorage.readBytes32Map(NONCE_KEY, bytes32(_space)));
   }
 
@@ -53,7 +53,7 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
     Transaction[] memory _txs,
     uint256 _nonce,
     bytes memory _signature
-  ) public override virtual {
+  ) public {
     // Validate and update nonce
     _validateNonce(_nonce);
 
@@ -77,9 +77,9 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
    */
   function selfExecute(
     Transaction[] memory _txs
-  ) public override virtual onlySelf {
+  ) public onlySelf {
     // Hash transaction bundle
-    bytes32 txHash = _hashData(abi.encode('self:', _txs));
+    bytes32 txHash = _hashData(abi.encode("self:", _txs));
 
     // Execute the transactions
     _execute(txHash, _txs);
@@ -102,14 +102,9 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
       bytes memory result;
 
       if (transaction.delegateCall) {
-        (success, result) = transaction.target.delegatecall{
-          gas: transaction.gasLimit
-        }(transaction.data);
+        (success, result) = transaction.target.delegatecall.gas(transaction.gasLimit)(transaction.data);
       } else {
-        (success, result) = transaction.target.call{
-          value: transaction.value,
-          gas: transaction.gasLimit
-        }(transaction.data);
+        (success, result) = transaction.target.call.value(transaction.value).gas(transaction.gasLimit)(transaction.data);
       }
 
       if (success) {
@@ -172,18 +167,5 @@ abstract contract ModuleCalls is IModuleCalls, IModuleAuth, ModuleERC165, Module
   function _decodeNonce(uint256 _rawNonce) private pure returns (uint256 _space, uint256 _nonce) {
     _nonce = uint256(bytes32(_rawNonce) & NONCE_MASK);
     _space = _rawNonce >> NONCE_BITS;
-  }
-
-  /**
-   * @notice Query if a contract implements an interface
-   * @param _interfaceID The interface identifier, as specified in ERC-165
-   * @return `true` if the contract implements `_interfaceID`
-   */
-  function supportsInterface(bytes4 _interfaceID) public override virtual pure returns (bool) {
-    if (_interfaceID == type(IModuleCalls).interfaceId) {
-      return true;
-    }
-
-    return super.supportsInterface(_interfaceID);
   }
 }

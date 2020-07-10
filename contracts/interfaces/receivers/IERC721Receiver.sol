@@ -1,5 +1,4 @@
-pragma solidity ^0.6.8;
-
+pragma solidity 0.5.16;
 
 interface IERC721Receiver {
   function onERC721Received(address, address, uint256, bytes calldata) external returns (bytes4);

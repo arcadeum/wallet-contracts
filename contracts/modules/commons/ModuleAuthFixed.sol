@@ -1,4 +1,4 @@
-pragma solidity ^0.6.8;
+pragma solidity 0.5.16;
 
 import "./ModuleAuth.sol";
 import "../../Wallet.sol";
@@ -10,13 +10,13 @@ import "../../Wallet.sol";
  *  This module allows wallets to be deployed with a default configuration
  *  without using any aditional contract storage
  */
-abstract contract ModuleAuthFixed is ModuleAuth {
-  bytes32 public immutable INIT_CODE_HASH;
-  address public immutable FACTORY;
+contract ModuleAuthFixed is ModuleAuth {
+  bytes32 public INIT_CODE_HASH;
+  address public FACTORY;
 
   constructor(address _factory) public {
     // Build init code hash of the deployed wallets using that module
-    bytes32 initCodeHash = keccak256(abi.encodePacked(Wallet.creationCode, uint256(address(this))));
+    bytes32 initCodeHash = keccak256(abi.encodePacked(type(Wallet).creationCode, uint256(address(this))));
 
     INIT_CODE_HASH = initCodeHash;
     FACTORY = _factory;
@@ -27,7 +27,7 @@ abstract contract ModuleAuthFixed is ModuleAuth {
    * @param _imageHash Hash image of signature
    * @return true if the signature image is valid
    */
-  function _isValidImage(bytes32 _imageHash) internal override view returns (bool) {
+  function _isValidImage(bytes32 _imageHash) internal view returns (bool) {
     return address(
       uint256(
         keccak256(
